@@ -9,7 +9,7 @@ from load_data import load_fold
 
 n_latent_factors = 20
 learning_rate = 0.001
-regularizer = 0.00
+regularizer = 0.02
 max_epochs = 100
 
 
