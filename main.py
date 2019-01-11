@@ -86,7 +86,6 @@ def run():
 
         # Calculate RMSE for training set
         logger.info(f'Epoch {epoch}, RMSE: {calculate_rmse(train, A, B)}')
-        logger.info(f'Test RMSE: {calculate_rmse(test, A, B)}')
 
         for user, movie, rating in triples:
             # Update values in vector A
