@@ -11,7 +11,7 @@ n_latent_factors = 20
 learning_rate = 0.001
 regularizer = 0.02
 max_epochs = 30
-stop_threshold = 0.01
+stop_threshold = 0.005
 
 
 def get_triples(from_set):
@@ -91,6 +91,7 @@ def run(train):
                 t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * user_values[k][user]
                 # Update the movie's kth factor with respect to the gradient and learning rate
+                # Large movie values are penalized using regularization
                 movie_values[movie][k] += learning_rate * (gradient - regularizer * movie_values[movie][k])
 
             # Update values in vector user_values
@@ -98,6 +99,7 @@ def run(train):
                 t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * movie_values[movie][k]
                 # Update the user's kth factor with respect to the gradient and learning rate
+                # Large user values are penalized using regularization
                 user_values[k][user] += learning_rate * (gradient - regularizer * user_values[k][user])
 
     return movie_values, user_values
