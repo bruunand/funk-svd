@@ -3,14 +3,14 @@ import random
 import numpy as np
 from loguru import logger
 
-from load_data import load_fold
+from load_data import load_fold, load_all_folds
 
 # n20~1.12
 
 n_latent_factors = 20
 learning_rate = 0.001
 regularizer = 0.02
-max_epochs = 100
+max_epochs = 10
 
 
 def get_triples(from_set):
@@ -59,14 +59,14 @@ def calculate_rmse(on_set, movie_values, user_values):
     return np.sqrt(sum_squared_errors / n_instances)
 
 
-def run():
-    train, test = load_fold(1)
+def run(train):
+    logger.info(f'Running with latent factors: {n_latent_factors}')
 
     # Construct the singular vectors
     movies = get_movies(train)
     movie_values, user_values = get_singular_vectors(max(movies) + 1, max(train.keys()) + 1)
 
-    # Training instances are represented as a list of tripes
+    # Training instances are represented as a list of triples
     triples = get_triples(train)
 
     for epoch in range(max_epochs):
@@ -80,24 +80,41 @@ def run():
         for user, movie, rating in triples:
             # Update values in vector movie_values
             for k in range(n_latent_factors):
-                t_sum = 0
-                for i in range(n_latent_factors):
-                    t_sum += movie_values[movie][i] * user_values[i][user]
-
+                t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * user_values[k][user]
+                # Update the users's kth factor with respect to the gradient and learning rate
                 movie_values[movie][k] += learning_rate * (gradient - regularizer * movie_values[movie][k])
 
             # Update values in vector user_values
             for k in range(n_latent_factors):
-                t_sum = 0
-                for i in range(n_latent_factors):
-                    t_sum += movie_values[movie][i] * user_values[i][user]
-
+                t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * movie_values[movie][k]
+                # Update the movie's kth factor with respect to the gradient and learning rate
+                user_values[k][user] += learning_rate * (gradient - regularizer * user_values[k][user])
 
-                # Update the kth factor with respect to the gradient and learning rate
-                movie_values[movie][k] += learning_rate * (gradient - regularizer * user_values[k][user])
+    return movie_values, user_values
+
+
+def test_latent_factors(factors, train_folds, test_folds, n_folds=5):
+    n_folds = min(n_folds, len(train_folds), len(test_folds))
+
+    for factor in factors:
+        global n_latent_factors
+        n_latent_factors = factor
+        rmse_results = []
+
+        # Test for each fold
+        for i in range(n_folds):
+            train = train_folds[i]
+            test = test_folds[i]
+
+            movie_values, user_values = run(train)
+            rmse_results.append(calculate_rmse(test, movie_values, user_values))
+
+        logger.info(f'Finished test for {factor} latent factors, test RMSE values: {rmse_results}')
+        logger.info(f'Average test RMSE: {np.mean(rmse_results)}')
 
 
 if __name__ == "__main__":
-    run()
+    test_latent_factors([10, 15, 20, 25, 30, 40, 45, 50], *load_all_folds(), n_folds=2)
+    # run(*load_fold(1))

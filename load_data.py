@@ -1,18 +1,11 @@
-def load_combined_folds():
-    train, test = ({} for _ in range(2))
+def load_all_folds():
+    train, test = ([] for _ in range(2))
 
     for i in range(1, 6):
         i_train, i_test = load_fold(i)
 
-        def update_set(child, parent):
-            for user, movie_rating in child.items():
-                if user in parent:
-                    parent[user].update(movie_rating)
-                else:
-                    parent[user] = movie_rating
-
-        update_set(i_train, train)
-        update_set(i_test, test)
+        train.append(i_train)
+        test.append(i_test)
 
     return train, test
 
