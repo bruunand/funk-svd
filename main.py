@@ -44,9 +44,9 @@ def get_singular_vectors(n_movies, n_users):
     # m = np.matmul(A, B)
 
 
-def calculate_rmse(on_set, A, B):
+def calculate_rmse(on_set, movie_values, user_values):
     # Compute the rating matrix R
-    R = np.matmul(A, B)
+    R = np.matmul(movie_values, user_values)
 
     n_instances = 0
     sum_squared_errors = 0
@@ -64,7 +64,7 @@ def run():
 
     # Construct the singular vectors
     movies = get_movies(train)
-    A, B = get_singular_vectors(max(movies) + 1, max(train.keys()) + 1)
+    movie_values, user_values = get_singular_vectors(max(movies) + 1, max(train.keys()) + 1)
 
     # Training instances are represented as a list of tripes
     triples = get_triples(train)
@@ -75,28 +75,28 @@ def run():
         random.shuffle(triples)
 
         # Calculate RMSE for training set
-        logger.info(f'Epoch {epoch}, RMSE: {calculate_rmse(train, A, B)}')
+        logger.info(f'Epoch {epoch}, RMSE: {calculate_rmse(train, movie_values, user_values)}')
 
         for user, movie, rating in triples:
-            # Update values in vector A
+            # Update values in vector movie_values
             for k in range(n_latent_factors):
                 t_sum = 0
                 for i in range(n_latent_factors):
-                    t_sum += A[movie][i] * B[i][user]
+                    t_sum += movie_values[movie][i] * user_values[i][user]
 
-                gradient = (rating - t_sum) * B[k][user]
-                A[movie][k] += learning_rate * (gradient - regularizer * A[movie][k])
+                gradient = (rating - t_sum) * user_values[k][user]
+                movie_values[movie][k] += learning_rate * (gradient - regularizer * movie_values[movie][k])
 
-            # Update values in vector B
+            # Update values in vector user_values
             for k in range(n_latent_factors):
                 t_sum = 0
                 for i in range(n_latent_factors):
-                    t_sum += A[movie][i] * B[i][user]
+                    t_sum += movie_values[movie][i] * user_values[i][user]
 
-                gradient = (rating - t_sum) * A[movie][k]
+                gradient = (rating - t_sum) * movie_values[movie][k]
 
                 # Update the kth factor with respect to the gradient and learning rate
-                A[movie][k] += learning_rate * (gradient - regularizer * B[k][user])
+                movie_values[movie][k] += learning_rate * (gradient - regularizer * user_values[k][user])
 
 
 if __name__ == "__main__":
