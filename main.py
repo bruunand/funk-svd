@@ -3,14 +3,15 @@ import random
 import numpy as np
 from loguru import logger
 
-from load_data import load_fold, load_all_folds
+from load_data import load_all_folds
 
 # n20~1.12
 
 n_latent_factors = 20
 learning_rate = 0.001
 regularizer = 0.02
-max_epochs = 10
+max_epochs = 30
+stop_threshold = 0.01
 
 
 def get_triples(from_set):
@@ -68,6 +69,7 @@ def run(train):
 
     # Training instances are represented as a list of triples
     triples = get_triples(train)
+    last_rmse = None
 
     for epoch in range(max_epochs):
         # At the start of every epoch, we shuffle the dataset
@@ -75,21 +77,27 @@ def run(train):
         random.shuffle(triples)
 
         # Calculate RMSE for training set
-        logger.info(f'Epoch {epoch}, RMSE: {calculate_rmse(train, movie_values, user_values)}')
+        # Stop if change is below threshold
+        rmse = calculate_rmse(train, movie_values, user_values)
+        if last_rmse and abs(rmse - last_rmse) < stop_threshold:
+            break
+        last_rmse = rmse
+
+        logger.info(f'Epoch {epoch}, RMSE: {rmse}')
 
         for user, movie, rating in triples:
             # Update values in vector movie_values
             for k in range(n_latent_factors):
                 t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * user_values[k][user]
-                # Update the users's kth factor with respect to the gradient and learning rate
+                # Update the movie's kth factor with respect to the gradient and learning rate
                 movie_values[movie][k] += learning_rate * (gradient - regularizer * movie_values[movie][k])
 
             # Update values in vector user_values
             for k in range(n_latent_factors):
                 t_sum = sum(movie_values[movie][i] * user_values[i][user] for i in range(n_latent_factors))
                 gradient = (rating - t_sum) * movie_values[movie][k]
-                # Update the movie's kth factor with respect to the gradient and learning rate
+                # Update the user's kth factor with respect to the gradient and learning rate
                 user_values[k][user] += learning_rate * (gradient - regularizer * user_values[k][user])
 
     return movie_values, user_values
