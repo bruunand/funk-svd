@@ -1,0 +1,2 @@
+numpy
+loguru
