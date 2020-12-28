@@ -1,6 +1,7 @@
-
-\.idea/
+.idea/
+ml-100k/
+.env/
+src/__pycache__/
 
 *.pyc
-
-ml-100k/
+*.pkl
