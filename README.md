@@ -1,5 +1,5 @@
 # Funk SVD
-An attempt at implementing Funk SVD in Python. Using the MovieLens 100K dataset, a RMSE of 0.95 is found with a latent
+An attempt at implementing Funk SVD in Python. Using the ML-100K dataset, a RMSE of 0.95 is found with a latent
 dimension size of 30. The optimization process is vanilla SGD. Only library used is numpy (and loguru for logging).
 
 ## Quickstart
