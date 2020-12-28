@@ -20,7 +20,7 @@ Run Funk SVD:
 python3 src/funk_svd.py
 ```
 This will combine all folds and train and try different latent dimensions on the ML-100K dataset.
-Tested on `pip` version `pip 20.3.3` and `python` version `3.9`.
+Tested on `pip 20.3.3` and `python 3.9`.
 
 ### Troubleshooting
 Be sure not to download the dataset too often.
